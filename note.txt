@@ -1,0 +1,73 @@
+What is the right way to parse XML from the URL without saving it to a file, if I already have the generated files from schema.
+
+Also for JSON the given example OpenWeather doesn't use the request -> response, is there a way to parse from the response ?
+
+-------------------------
+
+I used this method to get the string:
+
+public static String readJsonWeather() throws Exception {
+    StringBuilder sb = new StringBuilder();
+    URL url = new URL(WEATHER_URL);
+    Scanner in = new Scanner(url.openStream());
+    while (in.hasNext()) {
+       sb.append(in.next());
+    }
+    in.close();
+    return sb.toString();
+ }
+ 
+I used this method to get the string:
+
+public static String readJsonWeather() throws Exception {
+    StringBuilder sb = new StringBuilder();
+    URL url = new URL(WEATHER_URL);
+    Scanner in = new Scanner(url.openStream());
+    while (in.hasNext()) {
+       sb.append(in.next());
+    }
+    in.close();
+    return sb.toString();
+ }
+I passed the string into a parsing method like this:
+
+public static Weather parseJson(String json) { 
+   JsonParser parser = Json.createParser(new StringReader(json)); 
+   Event event = null; 
+   Weather weather = new Weather();
+   while (parser.hasNext()) { 
+      event = parser.next(); 
+      if (event == Event.KEY_NAME && parser.getString().equalsIgnoreCase("country")) { 
+         event = parser.next(); 
+         weather.setCountry(parser.getString()); 
+      } else if (event == Event.KEY_NAME && parser.getString().equalsIgnoreCase("sunrise")) { 
+         event = parser.next(); 
+         weather.setSunrise(convertUnixUtcTime(parser.getLong())); 
+      } else if (event == Event.KEY_NAME && parser.getString().equalsIgnoreCase("sunset")) { 
+         event = parser.next(); 
+         weather.setSunset(convertUnixUtcTime(parser.getLong())); 
+      } else if (event == Event.KEY_NAME && parser.getString().equalsIgnoreCase("temp")) { 
+         event = parser.next(); 
+         weather.setTemperature(parser.getString() + "c"); 
+      } else if (event == Event.KEY_NAME && parser.getString().equalsIgnoreCase("name")) { 
+         event = parser.next(); 
+         weather.setCity(parser.getString());  
+      } 
+   }  
+   return weather; 
+}
+
+However, it looks like open weather map has gone to a sign-in model.  I searched Google and found an url to get iso country codes:
+
+http://services.groupkt.com/country/get/iso2code/US
+
+http://services.groupkt.com/country/get/all
+
+The second link returns a lot of json.
+
+For parsing an xml stream, I'd do something like:
+
+DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+DocumentBuilder db = dbf.newDocumentBuilder();
+Document doc = db.parse(new URL(url).openStream());
+...
